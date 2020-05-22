@@ -194,6 +194,31 @@ const processData = (res) => {
         
 
     }
+    
+    const checkParsedData = (i) => {
+        return new Promise(resolve => {
+
+
+            let results = [];
+
+            //fs.createReadStream('./data2/' + allDates[i] + ".csv")
+            rs = fs.createReadStream('./data2/' + allDates[allDates.length-1] + '.csv')
+                rs.pipe(csv())
+                .on('data', (row) => {
+                    results.push(row)
+                    //console.log(row);
+                })
+                .on('end', () => {
+                    console.log('CSV file successfully read');
+                    //console.log(results.length)
+                    resolve(results)
+                    processData(results)
+                });
+                rs.on('error', function(error){ console.log("Dosya bulunamadı: ", error) });
+            })
+        
+
+    }
 
     for (let i = 0; i < 1; i++) {
         const ko = await gop(i)
