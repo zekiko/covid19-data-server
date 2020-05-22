@@ -202,7 +202,7 @@ const processData = (res) => {
             let results = [];
 
             //fs.createReadStream('./data2/' + allDates[i] + ".csv")
-            rs = fs.createReadStream('./data2/' + allDates[allDates.length-1] + '.csv')
+            rs = fs.createReadStream('./countriesAppended.csv')
                 rs.pipe(csv())
                 .on('data', (row) => {
                     results.push(row)
