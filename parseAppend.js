@@ -6,8 +6,8 @@ const { Parser } = require('json2csv');
 var json2csv = require('json2csv');
 
 const utcDate = new Date(Date.now());
-const statsDate = (utcDate.getFullYear() + "-" + ("0" + (utcDate.getMonth() + 1)).slice(-2) + "-" + ("0" + (utcDate.getDate() - 1)).slice(-2) )
-console.log(statsDate)
+//const statsDate = utcDate.getFullYear() + "-" + ("0" + (utcDate.getMonth() + 1)).slice(-2) + "-" + ("0" + (utcDate.getDate() - 1)).slice(-2)
+
 
 const getDaysInMonth = function (month, year) {
     // Here January is 1 based
@@ -54,9 +54,9 @@ const getAllDatesUntilToday = () => {
 }
 
 const allDates = getAllDatesUntilToday();
-console.log(allDates[allDates.length-1])
+//console.log("allDates[allDates.length-1]: ", allDates[allDates.length - 1])
 
-const transformFields = (arr) => {
+const transformFields = (arr, date) => {
     /* for (i in arr) {
         var inthKeys = Object.keys(arr[i])
         for (j of inthKeys) {
@@ -70,9 +70,9 @@ const transformFields = (arr) => {
             }
         }
     } */
-    for (i in arr){
-        var newObject= {
-            'Date': statsDate,
+    for (i in arr) {
+        var newObject = {
+            'Date': date,
             'Country': arr[i].Country_Region,
             'Confirmed': arr[i].Confirmed,
             'Recovered': arr[i].Recovered,
@@ -81,13 +81,19 @@ const transformFields = (arr) => {
         };
         arr[i] = newObject
     }
-    
-    console.log("arr: ", arr[0].Last_Update)
+
+    //console.log("arr: ", arr[0].Last_Update)
     return arr;
 }
 
-const processData = (res) => {
-    res = transformFields(res)
+
+const processData = (res, i) => {
+    console.log("Processing data...")
+    var splittedDate = allDates[allDates.length - i].split("-")
+    const date = splittedDate[2] + "-" + splittedDate[0] + "-" + splittedDate[1]
+
+
+    res = transformFields(res, date)
     //console.log(res)
 
     var countryNames = []
@@ -131,99 +137,127 @@ const processData = (res) => {
 
             countries.push(x[x.length - 1])
 
-            //console.log("bu: ", x, "********", countries)
-
         }
 
     }
 
     ////////////////////
-
     var newLine = "\r\n";
 
-    fs.stat('countriesAppended.csv', function (err, stat) {
+    fs.stat('countries.csv', function (err, stat) {
         var csvFileContent;
         if (err == null) {
-            console.log('File exists');
+            console.log('File exists... Appending data for ' + date);
 
             //write the actual data and end with newline
             csvFileContent = json2csv.parse(countries, { header: false }) + newLine;
 
-            fs.appendFileSync('countriesAppended.csv', csvFileContent, function (err) {
+            fs.appendFileSync('countries.csv', csvFileContent, function (err) {
                 if (err) throw err;
                 console.log('The "data to append" was appended to file!');
             });
+            
         }
         else {
             //write the headers and newline
             console.log('New file, writing with headers');
             csvFileContent = json2csv.parse(countries, { header: true }) + newLine;
 
-            fs.writeFileSync('countriesAppended.csv', csvFileContent, function (err) {
+            fs.writeFileSync('countries.csv', csvFileContent, function (err) {
                 if (err) throw err;
                 console.log('file saved');
             });
+
         }
     });
 
 
+
 }
 
+
+const getDaysCountNotUpdated = (arr) => {
+console.log(arr[22185], arr.length-1 )
+    let lastUpdatedDataDateSplitted = arr[arr.length - 1].Date.split("-")
+    let lastUpdatedDay = parseInt(lastUpdatedDataDateSplitted[lastUpdatedDataDateSplitted.length - 1])
+    //let result = utcDate.getDate() - lastUpdatedDataDay - 1
+
+    if (utcDate.getDate() === lastUpdatedDay) {
+        if (utcDate.getMonth() + 1 === parseInt(lastUpdatedDataDateSplitted[1])) {//same month
+            return 1;
+        }
+        result = (utcDate.getDate() + (getDaysInMonth(parseInt(lastUpdatedDataDateSplitted[1]), 2020) - parseInt(lastUpdatedDataDateSplitted[2]))) - 1
+    } else {
+        result = (utcDate.getDate() - lastUpdatedDay) - 1
+    }
+
+    return result;
+}
+
+
 (async () => {
-    const gop = (i) => {
+
+
+    const checkParsedData = () => {
         return new Promise(resolve => {
 
 
-            let results = [];
+            let countries_to_append = [];
 
             //fs.createReadStream('./data2/' + allDates[i] + ".csv")
-            rs = fs.createReadStream('./data2/' + allDates[allDates.length-1] + '.csv')
-                rs.pipe(csv())
+            rs = fs.createReadStream('./countries.csv')
+            rs.pipe(csv())
+                .on('data', (row) => {
+                    countries_to_append.push(row)
+                    //console.log(row);
+                })
+                .on('end', () => {
+                    console.log('File successfully read: countries.csv');
+                    console.log(countries_to_append.length)
+                    let count = getDaysCountNotUpdated(countries_to_append)
+                    resolve(count)
+
+                });
+            rs.on('error', function (error) { console.log("Dosya bulunamadı: ", error) });
+        })
+    }
+
+    const readData = (i) => {
+        return new Promise(resolve => {
+
+            let results = [];
+
+            //console.log("Gİrdi: ", i)
+
+            rs = fs.createReadStream('./data2/' + allDates[allDates.length - i] + '.csv')
+            rs.pipe(csv())
                 .on('data', (row) => {
                     results.push(row)
                     //console.log(row);
                 })
                 .on('end', () => {
-                    console.log('CSV file successfully read');
-                    //console.log(results.length)
-                    resolve(results)
-                    processData(results)
-                });
-                rs.on('error', function(error){ console.log("Dosya bulunamadı: ", error) });
-            })
-        
+                    console.log( 'File successfully read: ' + allDates[allDates.length - i] + '.csv');
 
+                    resolve(results)
+                    //processData(results)
+                });
+            rs.on('error', function (error) { console.log("Dosya bulunamadı: ", error) });
+        })
+    }
+
+    const daysCountNotUpdated = await checkParsedData()
+    //console.log("up: ", up)
+    
+    if(daysCountNotUpdated === 0){
+        console.log("DATA IS UP TO DATE.")
+    }
+
+    for (let i = daysCountNotUpdated; i > 0; i--) {
+        const dataToProcess = await readData(i)
+        //console.log(dataToProcess.length)
+        processData(dataToProcess, i)
     }
     
-    const checkParsedData = (i) => {
-        return new Promise(resolve => {
-
-
-            let results = [];
-
-            //fs.createReadStream('./data2/' + allDates[i] + ".csv")
-            rs = fs.createReadStream('./countriesAppended.csv')
-                rs.pipe(csv())
-                .on('data', (row) => {
-                    results.push(row)
-                    //console.log(row);
-                })
-                .on('end', () => {
-                    console.log('CSV file successfully read');
-                    //console.log(results.length)
-                    resolve(results)
-                    processData(results)
-                });
-                rs.on('error', function(error){ console.log("Dosya bulunamadı: ", error) });
-            })
-        
-
-    }
-
-    for (let i = 0; i < 1; i++) {
-        const ko = await gop(i)
-    }
-    //console.log(ko)
 })();
 
 
