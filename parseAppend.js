@@ -177,7 +177,7 @@ const processData = (res, i) => {
 
 
 const getDaysCountNotUpdated = (arr) => {
-console.log(arr[22185], arr.length-1 )
+
     let lastUpdatedDataDateSplitted = arr[arr.length - 1].Date.split("-")
     let lastUpdatedDay = parseInt(lastUpdatedDataDateSplitted[lastUpdatedDataDateSplitted.length - 1])
     //let result = utcDate.getDate() - lastUpdatedDataDay - 1
@@ -213,7 +213,7 @@ console.log(arr[22185], arr.length-1 )
                 })
                 .on('end', () => {
                     console.log('File successfully read: countries.csv');
-                    console.log(countries_to_append.length)
+                    //console.log(countries_to_append.length)
                     let count = getDaysCountNotUpdated(countries_to_append)
                     resolve(count)
 
