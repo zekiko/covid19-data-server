@@ -177,7 +177,7 @@ const processData = (res, i) => {
 
 
 const getDaysCountNotUpdated = (arr) => {
-
+    //Max one month
     let lastUpdatedDataDateSplitted = arr[arr.length - 1].Date.split("-")
     let lastUpdatedDay = parseInt(lastUpdatedDataDateSplitted[lastUpdatedDataDateSplitted.length - 1])
     //let result = utcDate.getDate() - lastUpdatedDataDay - 1

@@ -69,4 +69,6 @@ const utcDate = new Date(Date.now());
 
 
 resultDateStr = (("0" + (utcDate.getMonth() + 1)).slice(-2) + "-" + ("0" + utcDate.getDate()).slice(-2) + "-" + utcDate.getFullYear())
-console.log(resultDateStr)
+//console.log(resultDateStr)
+
+console.log(utcDate)
