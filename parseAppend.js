@@ -187,7 +187,9 @@ const getDaysCountNotUpdated = (arr) => {
             return 1;
         }
         result = (utcDate.getDate() + (getDaysInMonth(parseInt(lastUpdatedDataDateSplitted[1]), 2020) - parseInt(lastUpdatedDataDateSplitted[2]))) - 1
-    } else {
+    } else if(utcDate.getDate() < lastUpdatedDay){//burayı yeni ekledim, yeni aya geçince result negatif oluyordu.
+        result = (utcDate.getDate() + getDaysInMonth(parseInt(lastUpdatedDataDateSplitted[1]), 2020) - lastUpdatedDay) - 1 
+    }else{
         result = (utcDate.getDate() - lastUpdatedDay) - 1
     }
 
@@ -215,6 +217,7 @@ const getDaysCountNotUpdated = (arr) => {
                     console.log('File successfully read: countries.csv');
                     //console.log(countries_to_append.length)
                     let count = getDaysCountNotUpdated(countries_to_append)
+                    console.log("count from getDaysCountNotUpdated: ", count )
                     resolve(count)
 
                 });
